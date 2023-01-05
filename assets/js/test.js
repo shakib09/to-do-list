@@ -19,6 +19,9 @@ function add_task(task_title, task_description, task_time){
   return task_object;
 }
 
+function search_task(task_id){
+  return tasks.find((task_object)=>{return task_object.id==task_id;});
+}
 
 function delete_task_with_id(task_id){
   tasks = tasks.filter((task_object)=>{

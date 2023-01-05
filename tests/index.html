@@ -13,11 +13,19 @@
 <body>
 
   <div class="container">
-    <h2>Tasks</h2>
-    <!-- Button to Open the Modal -->
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" style="margin-top: 20px;">
-      <i class="fa-solid fa-plus"></i>
-    </button>
+
+    <div class="container-fluid mt-3">
+
+      <div class="row">
+        <div class="col"><h2>Tasks</h2></div>
+        <div class="col float-right">
+          <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
 
     <div class="container mt-3" id="tasks_list">
 
@@ -53,17 +61,53 @@
             </div>
             <div class="form-group">
               <label for="task_description">Task Description:</label>
-              <input type="text" class="form-control" id="task_description" placeholder="Description" name="task_description">
+              <input type="textarea" id="task_description" class="form-control"  placeholder="Description" name="task_description">
             </div>
             <div class="form-group">
               <label for="task_description">Time:</label>
-              <input type="datetime-local" class="form-control" id="task_description" placeholder="date" name="task_time">
+              <input type="datetime-local" class="form-control" id="task_time"  name="task_time">
             </div>
           </div>
           
           <!-- Modal footer -->
           <div class="modal-footer">
             <button type="button" id="new_task" class="btn btn-success" data-dismiss="modal">Create New task</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="edit_modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+        
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">Edit Task</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          
+          <!-- Modal body -->
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="task_title">Task Title:</label>
+              <input type="text" class="form-control" id="edit_task_title" placeholder="Title" name="task_title">
+            </div>
+            <div class="form-group">
+              <label for="task_description">Task Description:</label>
+              <input type="textarea" id="edit_task_description" class="form-control"  placeholder="Description" name="task_description">
+            </div>
+            <div class="form-group">
+              <label for="task_description">Time:</label>
+              <input type="datetime-local" class="form-control" id="edit_task_time"  name="task_time">
+            </div>
+          </div>
+          
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" id="save_task" class="btn btn-success" data-dismiss="modal">Save</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
           </div>
           
@@ -77,13 +121,17 @@
   <script>
     function task_element(task_object){
       return `<div class="card" id="${task_object.id}" style="margin-top: 16px;">
-        <div class="card-body">
-          <h1>${task_object.title}</h1>
-          <p>${task_object.time}</p>
-          <p>${task_object.description}</p>
-          <button id="edit_${task_object.id}"><i class="fa-regular fa-pen-to-square"></i></button>
-          <button id="delete_${task_object.id}"><i class="fa-sharp fa-solid fa-trash"></i></button>
-        </div>
+          <div class="card-header" id="title_${task_object.id}">${task_object.title}</div>
+          <div class="card-body">
+            <p id="time_${task_object.id}">${task_object.time}</p>
+            <p id="description_${task_object.id}">${task_object.description}</p>
+          </div>
+          <div class="card-footer">
+            <button type="button" id="edit_${task_object.id}" class="btn btn-primary" data-toggle="modal" data-target="#edit_modal">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button id="delete_${task_object.id}" class="btn btn-danger"><i class="fa-sharp fa-solid fa-trash"></i></button>
+          </div>
       </div>`;
 
     }
@@ -101,7 +149,35 @@
         console.log("remove task");
         remove_task(task_object.id);
       });
+      $(`#edit_${task_object.id}`).on('click', ()=>{
+        $("#edit_task_title").val(task_object.title);
+        $("#edit_task_description").val(task_object.description);
+        $("#edit_task_time").val(task_object.time);
+        document.getElementById("save_task").onclick = ()=>{update_task(task_object.id)};
+      });
     }
+    function update_task(task_id){
+      console.log("update task");
+      let task_title = $("#edit_task_title").val();
+      let task_description = $("#edit_task_description").val();
+      let task_time = $("#edit_task_time").val();
+
+      let task_object = search_task(task_id);
+      console.log("update task: (before)", task_object);
+
+      
+      task_object.title = task_title;
+      task_object.description = task_description;
+      task_object.time = task_time;
+
+      console.log("update task: (after)", task_object);
+
+      $(`#title_${task_id}`).text(task_title);
+      $(`#time_${task_id}`).text(task_time);
+      $(`#description_${task_id}`).text(task_description);
+    }
+
+
 
     function remove_task(task_id){
       delete_task_with_id(task_id);
