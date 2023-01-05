@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>To-Do List</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="../assets/fontawesome-free-6.2.1/css/all.min.css" />
+</head>
+<body>
+
+  <div class="container">
+    <h2>Tasks</h2>
+    <!-- Button to Open the Modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" style="margin-top: 20px;">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <div class="container mt-3" id="tasks_list">
+
+      <!-- <div class="card" style="margin-top: 16px;">
+        <div class="card-body">
+          <h1>Task Title</h1>
+          <p>It's a task description</p>
+          <button><i class="fa-regular fa-pen-to-square"></i></button>
+          <button><i class="fa-sharp fa-solid fa-trash"></i></button>
+        </div>
+      </div> -->
+
+    </div>
+    
+    
+
+    <!-- The Modal -->
+    <div class="modal" id="myModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+        
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">New Task</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          
+          <!-- Modal body -->
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="task_title">Task Title:</label>
+              <input type="text" class="form-control" id="task_title" placeholder="Title" name="task_title">
+            </div>
+            <div class="form-group">
+              <label for="task_description">Task Description:</label>
+              <input type="text" class="form-control" id="task_description" placeholder="Description" name="task_description">
+            </div>
+            <div class="form-group">
+              <label for="task_description">Time:</label>
+              <input type="datetime-local" class="form-control" id="task_description" placeholder="date" name="task_time">
+            </div>
+          </div>
+          
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" id="new_task" class="btn btn-success" data-dismiss="modal">Create New task</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  <script src="../assets/js/test.js">
+  </script>
+  <script>
+    function task_element(task_object){
+      return `<div class="card" id="${task_object.id}" style="margin-top: 16px;">
+        <div class="card-body">
+          <h1>${task_object.title}</h1>
+          <p>${task_object.time}</p>
+          <p>${task_object.description}</p>
+          <button id="edit_${task_object.id}"><i class="fa-regular fa-pen-to-square"></i></button>
+          <button id="delete_${task_object.id}"><i class="fa-sharp fa-solid fa-trash"></i></button>
+        </div>
+      </div>`;
+
+    }
+    function new_task(){
+      console.log("new task");
+      let task_title = $("#task_title").val();
+      let task_description = $("#task_description").val();
+      let task_time = $("#task_time").val();
+
+      let task_object = add_task(task_title, task_description, task_time);
+      console.log("new task: ", task_object);
+
+      $("#tasks_list").append(task_element(task_object));
+      $(`#delete_${task_object.id}`).on('click', ()=>{
+        console.log("remove task");
+        remove_task(task_object.id);
+      });
+    }
+
+    function remove_task(task_id){
+      delete_task_with_id(task_id);
+      $(`#${task_id}`).remove();
+    }
+
+    $("#new_task").on('click', ()=>{console.log("clicked"); new_task();});
+  </script>
+</body>
+</html>
