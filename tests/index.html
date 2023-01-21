@@ -53,7 +53,7 @@
       </div>
       
 
-      <div class="container mt-3" id="tasks_list">
+      <div class="container shadow-sm mt-3 py-5 px-5" id="tasks_list">
 
         <!-- <div class="card" style="margin-top: 16px;">
           <div class="card-body">
@@ -177,7 +177,7 @@
 
 
       function task_element(task_object){
-        return `<div class="card" id="${task_object.id}" style="margin-top: 16px;">
+        return `<div class="card shadow bg-white rounded" id="${task_object.id}" style="margin-top: 16px;">
             <div class="card-header" id="title_${task_object.id}">${task_object.title}</div>
             <div class="card-body">
               <p id="time_${task_object.id}">${task_object.time}</p>
