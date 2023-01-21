@@ -13,35 +13,28 @@
   <body>
 
     <div class="container">
-      <div class="toast" data-autohide="false" id="first_toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-          <img src="..." class="rounded mr-2" alt="">
-          <strong class="mr-auto">Bootstrap</strong>
-          <small class="text-muted">just now</small>
-          <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
+      <div aria-live="polite" aria-atomic="true" class="position-relative">
+        <!-- Position it: -->
+        <!-- - `.toast-container` for spacing between toasts -->
+        <!-- - `.position-absolute`, `top-0` & `end-0` to position the toasts in the upper right corner -->
+        <!-- - `.p-3` to prevent the toasts from sticking to the edge of the container  -->
+        <div id="toast_containers" class="toast-container position-absolute top-0 end-0 p-3">
+
+          <!-- TOASTS -->
         </div>
-        <div class="toast-body">
-          See? Just like this.
+      </div>
+
+      <div aria-live="assertive" aria-atomic="true" style="position: relative;  ">
+        <!-- Position it -->
+        <div id="toast_container" style="position: absolute; top: 0; right: 0;">
+      
+          <!-- Then put toasts within -->
+        
         </div>
       </div>
       
-      <div class="toast" data-autohide="false" id="second_toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-          <img src="..." class="rounded mr-2" alt="">
-          <strong class="mr-auto">Bootstrap</strong>
-          <small class="text-muted">2 seconds ago</small>
-          <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="toast-body">
-          Heads up, toasts will stack automatically
-        </div>
-      </div>
       <div class="container-fluid mt-3">
-
+        
         <div class="row">
           <div class="col"><h2>Tasks</h2></div>
           <div class="col">
@@ -144,6 +137,26 @@
     </div>
 
     <script>
+      class Task {
+        constructor(title, task_description, reminder_time, done, trashed){
+          this.title = title;
+          this.description = task_description;
+          this.reminder_time = reminder_time;
+          this.done = done;
+          this.trashed = trashed;
+        }
+      }
+
+      class TaskManager {
+        constructor(){
+          this.tasks = [];
+          this.container = null; // html container
+          this.element = null;   // function to call
+        }
+        add_task(task){
+          this.tasks.push(task);
+        }
+      }
       let tasks = [];
       let total_tasks = 0;
 
@@ -153,7 +166,8 @@
           'id': "task_"+(total_tasks+1),
           'title': task_title,
           'description': task_description,
-          'time': task_time
+          'time': task_time,
+          'checked': false
         };
         total_tasks += 1;
         return task_object;
@@ -241,8 +255,44 @@
         $(`#${task_id}`).remove();
       }
 
+      function taskToast(task){
+        return `<div tabindex="0" id="toast_${task.id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="false" >
+            <div class="toast-header">
+              <img src="..." class="rounded mr-2" alt="...">
+              <strong class="mr-auto">${task.title}</strong>
+              <small class="text-muted">${task.time}</small>
+              <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="toast-body">
+              ${task.description}
+            </div>
+          </div>`;
+      }
+      function reminderRunner(){
+        let ct = new Date();
+        console.log("running reminder...", ct);
+        
+        
+        for(task in tasks){
+          task = tasks[task];
+          let tt = new Date(task.time);
+          console.log("task: "+task+" tt: "+tt);
+          if(tt<=ct && task.checked==false){
+            console.log("reminder for task: ", task, taskToast(task));
+            $("#toast_container").append(taskToast(task));
+            $(`#toast_${task.id}`).toast("show");
+            task.checked = true;
+          }
+        }
+      }
+
       $("#new_task").on('click', ()=>{console.log("clicked"); new_task();});
-      $(".toast").toast("show");
+      // $(".toast").toast("show");
+      setInterval(() => {
+        reminderRunner();
+      }, 10000);
     </script>
   </body>
 </html>
