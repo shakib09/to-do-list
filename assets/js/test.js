@@ -28,4 +28,3 @@ function delete_task_with_id(task_id){
     return task_object.id != task_id;  
   });
 }
-
