@@ -29,26 +29,29 @@
             <!-- Modal body -->
             <div class="modal-body">
               <div class="form-group">
-                <label for="username">Username: </label>
-                <input type="text" class="form-control" id="username" placeholder="username" name="username">
+                <label for="signup_username">Username: </label>
+                <input type="text" class="form-control" id="signup_username" placeholder="username" name="signup_username">
               </div>
               <div class="form-group">
-                <label for="email">Email: </label>
-                <input type="email" class="form-control" id="email" placeholder="email" name="email">
+                <label for="signup_email">Email: </label>
+                <input type="email" class="form-control" id="signup_email" placeholder="email" name="signup_email">
               </div>
               <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" class="form-control"  placeholder="****" name="password">
+                <label for="signup_password">Password:</label>
+                <input type="password" id="signup_password" class="form-control"  placeholder="****" name="signup_password">
               </div>
               <div class="form-group">
-                <label for="confirm_password">Confirm Password:</label>
-                <input type="password" id="confirm_password" class="form-control"  placeholder="****" name="confirm_password">
+                <label for="signup_confirm_password">Confirm Password:</label>
+                <input type="password" id="signup_confirm_password" class="form-control"  placeholder="****" name="signup_confirm_password">
+              </div>
+              <div class="form-group">
+                <label id="signup_status">Please fill up the fields!</label>
               </div>
             </div>
             
             <!-- Modal footer -->
             <div class="modal-footer">
-              <button type="button" id="new_task" class="btn btn-success" data-dismiss="modal">Create New Account</button>
+              <button type="button" id="create_new_account" class="btn btn-success" data-dismiss="modal">Create New Account</button>
               <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
             </div>
             
@@ -320,6 +323,23 @@
       // setInterval(() => {
       //   reminderRunner();
       // }, 10000);
+      const __TODOLIST_MANAGER__ = new ToDoListManager();
+      function SignUp() {
+        __TODOLIST_MANAGER__.signup(
+          $("#signup_username").val(),
+          $("#signup_email").val(),
+          $("#signup_password").val(),
+          (user)=>{
+            $("#signup_status").text(`successful authentication: ${user.authorized} ${user.encrypted_password}`);
+            console.log("successful signup: ", user);
+          },
+          (error)=>{
+            $("#signup_status").text(`unsuccessful authorization: ${error}`);
+            console.log(`unsuccessful authorization: ${error}`);
+          }
+        );
+      }
+      $("#create_new_account").on('click', SignUp);
     </script>
   </body>
 </html>

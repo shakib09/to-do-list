@@ -17,16 +17,16 @@ class Task {
   static Pending = "PENDING"
   static Waiting = "WAITING"
 
-  constructor(id, title, task_description, tags, creation_time, reminder_time, status){
+  constructor(id, title, description, tags, creation_time, reminder_time, status){
     this.id = id;
     this.title = title;
-    this.description = task_description;
+    this.description = description;
     this.tags = tags;
     this.creation_time = creation_time;
     this.reminder_time = reminder_time;
     this.status = status;
   }
-  static getEncodedTask(task, key) {
+  static getEncryptedTask(task, key) {
     task.title = ToDoListUtilities.encrypt(task.title, key)
     task.description = ToDoListUtilities.encrypt(task.description, key)
     task.tags = ToDoListUtilities.encrypt(task.tags, key)
@@ -35,7 +35,7 @@ class Task {
     task.status = ToDoListUtilities.encrypt(task.status, key);
     return task;
   }
-  static getDecodedTask(task, key) {
+  static getDecryptedTask(task, key) {
     task.title = ToDoListUtilities.decrypt(task.title, key)
     task.description = ToDoListUtilities.decrypt(task.description, key)
     task.tags = ToDoListUtilities.decrypt(task.tags, key)
@@ -44,6 +44,40 @@ class Task {
     task.status = ToDoListUtilities.decrypt(task.status, key);
     return task;
   }
+
+  static saveTaskInLocalStorage(task) {
+    let jst = JSON.stringify(task);
+    localStorage.setItem(task.id, jst);
+  }
+
+  static getTaskFromLocalStorage(task_id){
+    let task = localStorage.getItem(task_id);
+    if(!task) throw Error(`Task(${task_id}) doesn't exist!`);
+    task = JSON.parse(task);
+    return new Task(
+      task.id,
+      task.title,
+      task.description,
+      task.tags,
+      task.creation_time,
+      task.reminder_time,
+      task.status
+    );
+  }
+
+  static createNewTask(title, description, tags, creation_time, reminder_time, status) {
+    let id = ToDoListUtilities.hashing_crypt(`${creation_time.toString()}-${title}+${tags}`);
+    return new Task(
+      id,
+      title,
+      description,
+      tags,
+      creation_time,
+      reminder_time,
+      status
+    );
+  }
+
 }
 
 
@@ -53,27 +87,31 @@ class User{
     this.email = email;
     this.password = password;
     this.encrypted_password = encrypted_password;
-    this.authorized = False;
+    this.authorized = false;
     this.tasks = tasks;
   }
   static createNewUser(username, email, password) {
-    if(!localStorage.getItem(username)) throw Error("Username already exists!");
-    user = new User(username, email, password, 
-                    ToDoListUtilities.hashing_crypt(encrypted_password),
+    if(localStorage.getItem(username)) throw Error("Username already exists!");
+    let user = new User(username, email, password, 
+                    ToDoListUtilities.hashing_crypt(password),
                     []
     );
+    user = User.getEncryptedUser(user);
+    User.saveUserObjInLocalStorage(user);
     return user;
   }
   static getAuthorizedUser(username, password) {
-    user = this.getUserObjFromLocalStorage(username);
-    if(user && user.encrypted_password == ToDoListUtilities.hashing_crypt(password)) {
+    let user = User.getUserObjFromLocalStorage(username);
+    if(!user) throw Error(`User (${username}) doesn't exist!`);
+    user.password = password;
+    user = User.getDecryptedUser(user);
+    
+    if(user.encrypted_password == ToDoListUtilities.hashing_crypt(user.password))
       user.authorized = True;
-      user.password = password;
-    }
     return user;
   }
   static saveUserObjInLocalStorage(user) {
-    user.password = null;
+    user.password = null;                 // strained point
     localStorage.setItem(user.username, JSON.stringify(user));
   }
   static getEncryptedUser(user) {
@@ -84,29 +122,52 @@ class User{
     user.email = ToDoListUtilities.decrypt(user.email, user.password);
     return user;
   }
-  
+
   static getUserObjFromLocalStorage(username) {
-    uuo = localStorage.getItem(username);
-    puo = JSON.parse(uuo);
+    let uuo = localStorage.getItem(username);
+    if(!uuo) throw Error(`Username(${username}) doesn't exist!`);
+
+    let puo = JSON.parse(uuo);
     return new User(puo.username,
                     puo.email,
                     puo.password,
                     puo.encrypted_password,
                     puo.tasks
     );
+    
   }
 }
 
 class ToDoListManager {
-  constructor(authorized_user){
-    this.authorized_user = authorized_user;
+  constructor(){
+    this.authorized_user = null;
   }
   add_task(task, callback){
     if(!this.authorized_user || !this.authorized_user.authorized)
       throw Error("User not authorized");
     task.owner = this.authorized_user.username;
   }
-  signup(username, password, successful_callback, unsuccessful_callback) {
-
+  signup(username, email, password, successful_callback, unsuccessful_callback) {
+    let user = null;
+    try{
+      user = User.createNewUser(username, email, password);
+      if(successful_callback) successful_callback(user);
+      else console.log(user);
+    }
+    catch(error) {
+      if(unsuccessful_callback) unsuccessful_callback(error);
+      else console.log(error);
+    }
+  }
+  signin(username, password, successful_callback, unsuccessful_callback) {
+    try{
+      this.authorized_user = User.getAuthorizedUser(username, password);
+      if(successful_callback) successful_callback(this.authorized_user);
+      else console.log(this.authorized_user);
+    }
+    catch(error){
+      if(unsuccessful_callback) unsuccessful_callback(error);
+      else console.log(error);
+    }
   }
 }
