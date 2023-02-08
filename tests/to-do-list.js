@@ -1,11 +1,14 @@
 class ToDoListUtilities {
   static hashing_crypt(message){
+    console.log("hashing_crypt ", message);
     return CryptoJS.SHA1(message).toString(CryptoJS.enc.Hex);
   }
   static encrypt(message, key) {
+    console.log("encrypt ", message, "with", key);
     return CryptoJS.AES.encrypt(message, key).toString();
   }
   static decrypt(message, key) {
+    console.log("decrypt ", message, "with", key);
     return CryptoJS.AES.decrypt(message, key).toString(CryptoJS.enc.Utf8);
   }
 }
@@ -96,8 +99,9 @@ class User{
                     ToDoListUtilities.hashing_crypt(password),
                     []
     );
-    user = User.getEncryptedUser(user);
+    console.log("new user created: ", user);
     User.saveUserObjInLocalStorage(user);
+    console.log("new user created: ", user);
     return user;
   }
   static getAuthorizedUser(username, password) {
@@ -109,8 +113,8 @@ class User{
     return user;
   }
   static saveUserObjInLocalStorage(user) {
-    user.password = null;                 // strained point
     user = User.getEncryptedUser(user);
+    user.password = null;                 // strained point
     localStorage.setItem(user.username, JSON.stringify(user));
   }
   static getEncryptedUser(user) {
@@ -183,14 +187,9 @@ class ToDoListManager {
   constructor(){
     this.authorized_user = null;
   }
-  add_task(task, callback){
-    if(!this.authorized_user || !this.authorized_user.authorized)
-      throw Error("User not authorized");
-    task.owner = this.authorized_user.username;
-  }
   signup(username, email, password, successful_callback, unsuccessful_callback) {
     let user = null;
-    try{
+    try {
       user = User.createNewUser(username, email, password);
       if(successful_callback) successful_callback(user);
       else console.log(user);

@@ -330,7 +330,7 @@
           $("#signup_email").val(),
           $("#signup_password").val(),
           (user)=>{
-            $("#signup_status").text(`successful authentication: ${user.authorized} ${user.encrypted_password}`);
+            $("#signup_status").text(`successful signup: ${user.username} ${user.encrypted_password}`);
             console.log("successful signup: ", user);
           },
           (error)=>{
