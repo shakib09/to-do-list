@@ -99,9 +99,7 @@ class User{
                     ToDoListUtilities.hashing_crypt(password),
                     []
     );
-    console.log("new user created: ", user);
     User.saveUserObjInLocalStorage(user);
-    console.log("new user created: ", user);
     return user;
   }
   static getAuthorizedUser(username, password) {
