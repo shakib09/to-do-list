@@ -49,14 +49,18 @@ class Task {
   }
 
   static saveTaskInLocalStorage(task) {
+    console.log("save task, task: ", task);
     let jst = JSON.stringify(task);
+    console.log("save task: ", jst);
     localStorage.setItem(task.id, jst);
   }
 
   static getTaskFromLocalStorage(task_id){
     let task = localStorage.getItem(task_id);
     if(!task) throw Error(`Task(${task_id}) doesn't exist!`);
+    
     task = JSON.parse(task);
+    console.log("things changes, ", task);
     return new Task(
       task.id,
       task.title,
@@ -69,7 +73,7 @@ class Task {
   }
 
   static createNewTask(title, description, tags, creation_time, reminder_time, status) {
-    let id = ToDoListUtilities.hashing_crypt(`${creation_time.toString()}-${title}+${tags}`);
+    let id = ToDoListUtilities.hashing_crypt(`${creation_time.toString()}-${title}`);
     return new Task(
       id,
       title,
@@ -106,11 +110,13 @@ class User{
     let user = User.getUserObjFromLocalStorage(username);
     if(!user) throw Error(`User (${username}) doesn't exist!`);
     user.password = password;
+    console.log("password: ", password, user.password);
     if(user.encrypted_password == ToDoListUtilities.hashing_crypt(user.password))
-      user.authorized = True;
-    return user;
+      user.authorized = true;
+    return User.getDecryptedUser(user);
   }
   static saveUserObjInLocalStorage(user) {
+    console.log("inside save user ", user);
     user = User.getEncryptedUser(user);
     user.password = null;                 // strained point
     localStorage.setItem(user.username, JSON.stringify(user));
@@ -135,14 +141,22 @@ class User{
                     puo.encrypted_password,
                     puo.tasks
     );
-    return User.getDecryptedUser(user);
+    return user;
+  }
+  getTask(task_id) {
+    if(this.tasks.indexOf(task_id)<0) 
+      throw Error(`Task(${task_id}) for User(${this.username}) doesn't exist`);
+    let task = Task.getTaskFromLocalStorage(task_id);
+    console.log("task: ", task, "user: ", this);
+    task = Task.getDecryptedTask(task, this.password);
+    return task;
   }
   addNewTask(task) {
-    let encrypted_task = Task.getEncryptedTask(new_task, this.password);
+    let encrypted_task = Task.getEncryptedTask(task, this.password);
     Task.saveTaskInLocalStorage(encrypted_task);
     this.tasks.push(encrypted_task.id);
     User.saveUserObjInLocalStorage(this);
-    return task;
+    return this.getTask(encrypted_task.id);
   }
   updateTask(task_id, title, description, tags, creation_time, reminder_time, status) {
     if(this.tasks.indexOf(task_id)<0) 
@@ -182,8 +196,36 @@ class User{
 }
 
 class ToDoListManager {
-  constructor(){
+  constructor(authorized_callback, unauthorized_callback){
     this.authorized_user = null;
+    this.authorized_username = null;
+    this.authorized_password = null;
+    if(localStorage.getItem("authorized_username") && localStorage.getItem("authorized_password")) {
+      this.authorized_username = localStorage.getItem("authorized_username");
+      this.authorized_password = localStorage.getItem("authorized_password");
+      try {
+        this.authorized_user = User.getAuthorizedUser(this.authorized_username, this.authorized_password);
+        if(authorized_callback) authorized_callback(this.authorized_user);
+        else console.log("currently logged in user: ", this.authorized_user);
+      }
+      catch(error) {
+        ToDoListManager.__unauthorize__();
+        if(unauthorized_callback) unauthorized_callback(true);
+        else console.log("please log in!");
+      }
+    }
+    else {
+      if(unauthorized_callback) unauthorized_callback(true);
+      else console.log("no authorized user currently logged in");
+    }
+  }
+  static __unauthorize__() {
+    localStorage.setItem("authorized_username", null);
+    localStorage.setItem("authorized_password", null);
+  }
+  static __authorize__(username, password) {
+    localStorage.setItem("authorized_username", username);
+    localStorage.setItem("authorized_password", password);
   }
   signup(username, email, password, successful_callback, unsuccessful_callback) {
     let user = null;
@@ -200,6 +242,7 @@ class ToDoListManager {
   signin(username, password, successful_callback, unsuccessful_callback) {
     try{
       this.authorized_user = User.getAuthorizedUser(username, password);
+      ToDoListManager.__authorize__(username, password);
       if(successful_callback) successful_callback(this.authorized_user);
       else console.log(this.authorized_user);
     }
@@ -208,9 +251,10 @@ class ToDoListManager {
       else console.log(error);
     }
   }
-  logout(successful_callback, unsuccessful_callback) {
+  signout(successful_callback, unsuccessful_callback) {
     if(this.authorized_user) {
       this.authorized_user = null;
+      ToDoListManager.__unauthorize__();
       if(successful_callback) successful_callback("Logout successfull!");
     }
     else {
@@ -221,7 +265,8 @@ class ToDoListManager {
     try {
       let new_task = Task.createNewTask(title, description, tags, creation_time, reminder_time, status);
       if(!new_task) throw Error("Failed to create task!");
-      User.addNewTask(new_task);
+      console.log("new task: ", new_task);
+      this.authorized_user.addNewTask(new_task);
       if(successful_callback) successful_callback(new_task);
       else console.log(new_task);
     }

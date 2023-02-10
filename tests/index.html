@@ -32,7 +32,6 @@
             <li><a class="dropdown-item" href="#">Analytics</a></li>
           </ul>
         </div>
-  
         <div class="d-flex align-items-center justify-content-end">
           
   
@@ -41,12 +40,12 @@
               <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" class="rounded-circle">
             </a>
             <ul class="dropdown-menu text-small shadow">
-              <li><a class="dropdown-item" href="#">New project...</a></li>
-              <li><a class="dropdown-item" href="#">Settings</a></li>
-              <li><a class="dropdown-item" href="#">Profile</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#signup_modal">Sign Up</a></li>
-              <li><a class="dropdown-item" href="#">Sign out</a></li>
+              <li class="signedin_links"><a class="dropdown-item" href="#"><span id="welcome">Welcome!</span></a></li>
+              <li class="signedin_links"><a class="dropdown-item" href="#">My Account</a></li>
+              <li class="signedin_links"><hr class="dropdown-divider"></li>
+              <li class="unsignedin_links" id="signup_dropdown"><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#signup_modal">Sign Up</a></li>
+              <li class="unsignedin_links" id="signin_dropdown"><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#signin_modal">Sign In</a></li>
+              <li class="signedin_links" id="signout_dropdown"><a class="dropdown-item" href="#">Sign Out</a></li>
             </ul>
           </div>
         </div>
@@ -89,7 +88,45 @@
             
             <!-- Modal footer -->
             <div class="modal-footer">
-              <button type="button" id="create_new_account" class="btn btn-success" data-dismiss="modal">Create New Account</button>
+              <button type="button" id="signup_button" class="btn btn-success" data-dismiss="modal">Create New Account</button>
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="modal" id="signin_modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+          
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h4 class="modal-title text-center">Sign In</h4>
+              <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+            </div>
+            
+            <!-- Modal body -->
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="signin_username">Username: </label>
+                <input type="text" class="form-control" id="signin_username" placeholder="username" name="signin_username">
+              </div>
+              
+              <div class="form-group">
+                <label for="signin_password">Password:</label>
+                <input type="password" id="signin_password" class="form-control"  placeholder="****" name="signin_password">
+              </div>
+
+              <div class="form-group">
+                <label id="signin_status">Please fill up the fields!</label>
+              </div>
+            </div>
+            
+            <!-- Modal footer -->
+            <div class="modal-footer">
+              <button type="button" id="signin_button" class="btn btn-success" data-dismiss="modal">Sign In</button>
               <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
             </div>
             
@@ -179,8 +216,21 @@
                 <input type="textarea" id="task_description" class="form-control"  placeholder="Description" name="task_description">
               </div>
               <div class="form-group">
-                <label for="task_description">Time:</label>
-                <input type="datetime-local" class="form-control" id="task_time"  name="task_time">
+                <label for="task_description">Tags:</label>
+                <input type="textarea" id="task_tags" class="form-control"  placeholder="tags" name="task_tags">
+              </div>
+              <div class="form-group">
+                <label for="task_description">Reminder Time:</label>
+                <input type="datetime-local" class="form-control" id="task_reminder_time"  name="task_reminder_time">
+              </div>
+              <div class="form-group">
+                <label for="task_description">Status:</label>
+                <select class="form-select" id="task_status" aria-label="select status">
+                  <option value="WAITING" selected>Waiting</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="DONE">Done</option>
+                  <option value="TRASHED">Tashed</option>
+                </select>
               </div>
             </div>
             
@@ -235,45 +285,18 @@
     <script src="./to-do-list.js" type="text/javascript"></script>
     <script>
       
-      let tasks = [];
-      let total_tasks = 0;
 
-      function build_task_object(task_title, task_description, task_time){
-
-        let task_object = {
-          'id': "task_"+(total_tasks+1),
-          'title': task_title,
-          'description': task_description,
-          'time': task_time,
-          'checked': false
-        };
-        total_tasks += 1;
-        return task_object;
-      }
-
-      function add_task(task_title, task_description, task_time){
-        let task_object = build_task_object(task_title, task_description, task_time);
-        tasks.push(task_object);
-        return task_object;
-      }
-
-      function search_task(task_id){
-        return tasks.find((task_object)=>{return task_object.id==task_id;});
-      }
-
-      function delete_task_with_id(task_id){
-        tasks = tasks.filter((task_object)=>{
-          return task_object.id != task_id;  
-        });
-      }
 
 
       function task_element(task_object){
         return `<div class="card shadow bg-white rounded" id="${task_object.id}" style="margin-top: 16px;">
             <div class="card-header" id="title_${task_object.id}">${task_object.title}</div>
             <div class="card-body">
-              <p id="time_${task_object.id}">${task_object.time}</p>
+              <p id="creation_time_${task_object.id}">Creation Time: ${task_object.creation_time}</p>
               <p id="description_${task_object.id}">${task_object.description}</p>
+              <p id="reminder_time_${task_object.id}">Reminder Time: ${task_object.reminder_time}</p>
+              <p id="status_${task_object.id}">Status: ${task_object.status}</p>
+              <p id="tags_${task_object.id}">Tags: ${task_object.tags}</p>
             </div>
             <div class="card-footer">
               <button type="button" id="edit_${task_object.id}" class="btn btn-primary" data-bs-bs-toggle="modal" data-bs-bs-target="#edit_modal">
@@ -338,7 +361,7 @@
             <div class="toast-header">
               <img src="..." class="rounded mr-2" alt="...">
               <strong class="mr-auto">${task.title}</strong>
-              <small class="text-muted">${task.time}</small>
+              <small class="text-muted">${task.creation_time}</small>
               <button type="button" class="ml-2 mb-1 close" data-bs-dismiss="toast" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -371,7 +394,18 @@
       // setInterval(() => {
       //   reminderRunner();
       // }, 10000);
-      const __TODOLIST_MANAGER__ = new ToDoListManager();
+      const __TODOLIST_MANAGER__ = new ToDoListManager(
+        (authorized_user)=>{
+          $(".signedin_links").show();
+          $(".unsignedin_links").hide();
+          $("#welcome").text(`Welcome ${authorized_user.username}`);
+          console.log("currently logged in user: ", authorized_user);
+        },
+        (message)=>{
+          $(".signedin_links").hide();
+          console.log(message);
+        }
+      );
       function SignUp() {
         __TODOLIST_MANAGER__.signup(
           $("#signup_username").val(),
@@ -382,13 +416,83 @@
             console.log("successful signup: ", user);
           },
           (error)=>{
-            $("#signup_status").text(`unsuccessful authorization: ${error}`);
+            $("#signup_status").text(`unsuccessful signup: ${error}`);
+            console.log(`unsuccessful signup: ${error}`);
+          }
+        );
+      }
+      $("#signup_button").on('click', SignUp);
+      $("#signup_modal").on('shown.bs.modal', ()=> $("#signup_username").focus());
+
+      function SignIn() {
+        __TODOLIST_MANAGER__.signin(
+          $("#signin_username").val(),
+          $("#signin_password").val(),
+          (user)=>{
+            $("#signin_status").text(`successful signedin: ${user.username} ${user.encrypted_password}`);
+            console.log("successful signedin: ", user);
+
+            $(".signedin_links").show();
+            $(".unsignedin_links").hide();
+            $("#welcome").text(`Welcome ${user.username}`);
+          },
+          (error)=>{
+            $("#signin_status").text(`unsuccessful authorization: ${error}`);
             console.log(`unsuccessful authorization: ${error}`);
           }
         );
       }
-      $("#create_new_account").on('click', SignUp);
-      $("#signup_modal").on('shown.bs.modal', ()=> $("#signup_username").focus());
+      $("#signin_button").on('click', SignIn);
+      $("#signin_modal").on('shown.bs.modal', ()=> $("#signin_username").focus());
+
+      function SignOut() {
+        __TODOLIST_MANAGER__.signout(
+          (message)=>{
+            console.log("successful signedout: ", message);
+
+            $(".signedin_links").hide();
+            $(".unsignedin_links").show();
+          },
+          (error)=>{
+            console.log(`unsuccessful signedout: ${error}`);
+          }
+        );
+      }
+      $("#signout_dropdown").on('click', SignOut);
+
+      function AddNewTask() {
+        __TODOLIST_MANAGER__.addNewTask(
+          $("#task_title").val(),
+          $("#task_description").val(),
+          null,
+          (new Date()).toString(),
+          $("#task_reminder_time").val(),
+          $("#task_status").val(),
+          (task)=>{
+            console.log("successful task creation: ", task);
+
+            $("#tasks_list").append(task_element(task));
+            $(`#delete_${task.id}`).on('click', ()=>{
+              console.log("remove task", task.id);
+              remove_task(task.id);
+            });
+            $(`#edit_${task.id}`).on('click', ()=>{
+              $("#edit_task_title").val(task.title);
+              $("#edit_task_description").val(task.description);
+              $("#edit_task_time").val(task.reminder_time);
+              document.getElementById("save_task").onclick = ()=>{update_task(task.id)};
+            });
+          },
+          (error)=>{
+            console.log(`unsuccessful on task creations: ${error}`);
+          }
+        );
+      }
+      $("#new_task").on('click', AddNewTask);
+
+
+
+      
     </script>
   </body>
 </html>
