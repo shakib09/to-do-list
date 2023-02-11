@@ -29,38 +29,39 @@ class Task {
     this.reminder_time = reminder_time;
     this.status = status;
   }
-  static getEncryptedTask(task, key) {
-    task.title = ToDoListUtilities.encrypt(task.title, key)
-    task.description = ToDoListUtilities.encrypt(task.description, key)
-    task.tags = ToDoListUtilities.encrypt(task.tags, key)
-    task.creation_time = ToDoListUtilities.encrypt(task.creation_time, key);
-    task.reminder_time = ToDoListUtilities.encrypt(task.reminder_time, key);
-    task.status = ToDoListUtilities.encrypt(task.status, key);
-    return task;
+  
+  getEncryptedData(key) {
+    return {
+      title: ToDoListUtilities.encrypt(this.title, key),
+      description:  ToDoListUtilities.encrypt(this.description, key),
+      tags: ToDoListUtilities.encrypt(this.tags, key),
+      creation_time: ToDoListUtilities.encrypt(this.creation_time, key),
+      reminder_time: ToDoListUtilities.encrypt(this.reminder_time, key),
+      status: ToDoListUtilities.encrypt(this.status, key)
+    };
   }
-  static getDecryptedTask(task, key) {
-    task.title = ToDoListUtilities.decrypt(task.title, key)
-    task.description = ToDoListUtilities.decrypt(task.description, key)
-    task.tags = ToDoListUtilities.decrypt(task.tags, key)
-    task.creation_time = ToDoListUtilities.decrypt(task.creation_time, key);
-    task.reminder_time = ToDoListUtilities.decrypt(task.reminder_time, key);
-    task.status = ToDoListUtilities.decrypt(task.status, key);
-    return task;
-  }
-
-  static saveTaskInLocalStorage(task) {
-    console.log("save task, task: ", task);
-    let jst = JSON.stringify(task);
-    console.log("save task: ", jst);
-    localStorage.setItem(task.id, jst);
+  getDecryptedData(key) {
+    return {
+      title: ToDoListUtilities.decrypt(this.title, key),
+      description:  ToDoListUtilities.decrypt(this.description, key),
+      tags: ToDoListUtilities.decrypt(this.tags, key),
+      creation_time: ToDoListUtilities.decrypt(this.creation_time, key),
+      reminder_time: ToDoListUtilities.decrypt(this.reminder_time, key),
+      status: ToDoListUtilities.decrypt(this.status, key)
+    };
   }
 
-  static getTaskFromLocalStorage(task_id){
+  save() {
+    let json_data = JSON.stringify(this);
+    localStorage.setItem(this.id, json_data);
+  }
+
+  static getTaskObj(task_id){
     let task = localStorage.getItem(task_id);
-    if(!task) throw Error(`Task(${task_id}) doesn't exist!`);
+    if(!task) 
+      throw Error(`Task(${task_id}) doesn't exist!`);
     
     task = JSON.parse(task);
-    console.log("things changes, ", task);
     return new Task(
       task.id,
       task.title,
@@ -74,7 +75,7 @@ class Task {
 
   static createNewTask(title, description, tags, creation_time, reminder_time, status) {
     let id = ToDoListUtilities.hashing_crypt(`${creation_time.toString()}-${title}`);
-    return new Task(
+    let new_task = new Task(
       id,
       title,
       description,
@@ -83,81 +84,37 @@ class Task {
       reminder_time,
       status
     );
+    new_task.save();
+    return Task.getTaskObj(id);
   }
 
 }
 
 
 class User{
-  constructor(username, email, password, encrypted_password, tasks) {
+  constructor(username, email, encrypted_password, tasks) {
     this.username = username;
     this.email = email;
-    this.password = password;
     this.encrypted_password = encrypted_password;
     this.authorized = false;
     this.tasks = tasks;
-  }
-  static createNewUser(username, email, password) {
-    if(localStorage.getItem(username)) throw Error("Username already exists!");
-    let user = new User(username, email, password, 
-                    ToDoListUtilities.hashing_crypt(password),
-                    []
-    );
-    User.saveUserObjInLocalStorage(user);
-    return user;
-  }
-  static getAuthorizedUser(username, password) {
-    let user = User.getUserObjFromLocalStorage(username);
-    if(!user) throw Error(`User (${username}) doesn't exist!`);
-    user.password = password;
-    console.log("password: ", password, user.password);
-    if(user.encrypted_password == ToDoListUtilities.hashing_crypt(user.password))
-      user.authorized = true;
-    return User.getDecryptedUser(user);
-  }
-  static saveUserObjInLocalStorage(user) {
-    console.log("inside save user ", user);
-    user = User.getEncryptedUser(user);
-    user.password = null;                 // strained point
-    localStorage.setItem(user.username, JSON.stringify(user));
-  }
-  static getEncryptedUser(user) {
-    user.email = ToDoListUtilities.encrypt(user.email, user.password);
-    return user;
-  }
-  static getDecryptedUser(user) {
-    user.email = ToDoListUtilities.decrypt(user.email, user.password);
-    return user;
-  }
+  } 
 
-  static getUserObjFromLocalStorage(username) {
-    let uuo = localStorage.getItem(username);
-    if(!uuo) throw Error(`Username(${username}) doesn't exist!`);
-
-    let puo = JSON.parse(uuo);
-    let user = new User(puo.username,
-                    puo.email,
-                    puo.password,
-                    puo.encrypted_password,
-                    puo.tasks
-    );
-    return user;
-  }
   getTask(task_id) {
     if(this.tasks.indexOf(task_id)<0) 
       throw Error(`Task(${task_id}) for User(${this.username}) doesn't exist`);
-    let task = Task.getTaskFromLocalStorage(task_id);
-    console.log("task: ", task, "user: ", this);
-    task = Task.getDecryptedTask(task, this.password);
-    return task;
+    let task = Task.getTaskObj(task_id);
+    return task.getDecryptedTaskData(this.password);
   }
-  addNewTask(task) {
-    let encrypted_task = Task.getEncryptedTask(task, this.password);
+
+  addTask(task, password) {
+    let encrypted_task = task.getEncryptedData(password);
     Task.saveTaskInLocalStorage(encrypted_task);
     this.tasks.push(encrypted_task.id);
     User.saveUserObjInLocalStorage(this);
     return this.getTask(encrypted_task.id);
   }
+
   updateTask(task_id, title, description, tags, creation_time, reminder_time, status) {
     if(this.tasks.indexOf(task_id)<0) 
       throw Error(`Task(${task_id}) for User(${this.username}) doesn't exist`);
@@ -172,6 +129,7 @@ class User{
     Task.saveTaskInLocalStorage(Task.getEncryptedTask(task, this.password));
     return task;
   }
+
   deleteTask(task_id) {
     if(this.tasks.indexOf(task_id)<0) 
       throw Error(`Task(${task_id}) for User(${this.username}) doesn't exist`);
@@ -184,6 +142,7 @@ class User{
     User.saveUserObjInLocalStorage(this);
     return task;
   }
+
   updateTaskStatus(task_id, status) {
     if(this.tasks.indexOf(task_id)<0) 
       throw Error(`Task(${task_id}) for User(${this.username}) doesn't exist`);
@@ -192,6 +151,75 @@ class User{
     task.status = status;
     Task.saveTaskInLocalStorage(Task.getEncryptedTask(task, this.password));
     return task;
+  }
+
+  getEncryptedData(password) {
+    if(!password)
+      throw Error("Password not given!");
+    
+    return {
+      username: this.username,
+      email: ToDoListUtilities.encrypt(this.email, password),
+      encrypted_password: this.encrypted_password,
+      tasks: this.tasks
+    };
+  }
+
+  getDecryptedData(password) {
+    if(!password)
+      throw Error("Password not given!");
+  
+    return {
+      username: this.username,
+      email: ToDoListUtilities.decrypt(this.email, password),
+      tasks: this.tasks
+    };
+  }
+
+  // encrypt user data and save
+  save(password) {
+    localStorage.setItem(
+      this.username, 
+      JSON.stringify(this.getEncryptedData(password))
+    );
+  }
+
+  // returns user with encrypted data, but without password 
+  static createNewUser(username, email, password) {
+    if(localStorage.getItem(username)) 
+      throw Error(`Username ${username} already exists!`);
+    let new_user = new User(
+      username, 
+      email, 
+      ToDoListUtilities.hashing_crypt(password),
+      []
+    );
+    new_user.save();
+    return User.getUserObj(username);
+  }
+
+  // returns user with password and encrypted data
+  static getAuthorizedUser(username, password) {
+    let user = User.getUserObj(username);
+    if(!(user.encrypted_password == ToDoListUtilities.hashing_crypt(password)))
+      throw Error("Password Doesn't match!");
+    return user
+  }
+
+  static getUserObj(username) {
+    let json_data = localStorage.getItem(username);
+    if(!json_data) 
+      throw Error(`Username(${username}) doesn't exist!`);
+
+    // parsed json data
+    let pjd = JSON.parse(json_data);
+    let user = new User(
+      pjd.username,
+      pjd.email,
+      pjd.encrypted_password,
+      pjd.tasks
+    );
+    return user;
   }
 }
 
