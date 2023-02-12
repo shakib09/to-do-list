@@ -242,15 +242,14 @@ class User{
 }
 
 class TaskLoader {
-  constructor(user, bulk_size=5) {
+  constructor(user) {
     this.user = user;
     this.loaded_tasks = [];
     this.current_indx = 0;
-    this.bulk_size = bulk_size;
     this.stale = false;
     this.previous_length = this.user.tasks.length;
   }
-  load(password) {
+  load(password, bulk_size=5) {
     if(this.user.tasks.length > this.previous_length) {
       let temp = this.user.tasks.length-this.previous_length-1;
       while(temp>=0) {
@@ -260,13 +259,13 @@ class TaskLoader {
       }
       this.previous_length = this.user.tasks.length;
     }
-    
+
     if(this.current_indx>=this.user.tasks.length || this.stale) {
       this.stale = true;
       throw Error("Can't load more!");
     }
     let temp = 0;
-    while(this.current_indx<this.user.tasks.length && temp<this.bulk_size) {
+    while(this.current_indx<this.user.tasks.length && temp<bulk_size) {
       let task_obj = this.user.getTask(this.user.tasks[this.current_indx], password);
       this.loaded_tasks.push(task_obj);
       this.current_indx += 1;
@@ -275,8 +274,7 @@ class TaskLoader {
     return this.loaded_tasks.slice(this.current_indx-temp, this.current_indx);
   }
   loadAll(password) {
-    this.bulk_size = this.user.tasks.length;
-    return this.load(password);
+    return this.load(password, this.user.tasks.length);
   }
 }
 
@@ -285,12 +283,17 @@ class ToDoListManager {
     this.authorized_user = null;
     this.authorized_username = JSON.parse(localStorage.getItem("authorized_username"));
     this.authorized_password = JSON.parse(localStorage.getItem("authorized_password"));
+    this.task_loader = null;
+
     if(this.authorized_username && this.authorized_password) {
 
       try {
         this.authorized_user = User.getAuthorizedEncryptedUser(this.authorized_username, this.authorized_password);
-        if(authorized_callback) authorized_callback(this.authorized_user);
-        else console.log("currently logged in user: ", this.authorized_user);
+        this.task_loader = new TaskLoader(this.authorized_user);
+        if(authorized_callback) 
+          authorized_callback(this.authorized_user, this.task_loader.load(this.authorized_password));
+        else 
+          console.log("currently logged in user: ", this.authorized_user);
       }
       catch(error) {
         ToDoListManager.__unauthorize__();
@@ -333,6 +336,7 @@ class ToDoListManager {
       this.authorized_user = User.getAuthorizedEncryptedUser(username, password);
       ToDoListManager.__authorize__(username, password);
       this.authorized_password = password;
+      this.task_loader = new TaskLoader(this.authorized_user);
       if(successful_callback) successful_callback(this.authorized_user);
       else console.log(this.authorized_user);
     }
@@ -340,6 +344,7 @@ class ToDoListManager {
       if(unsuccessful_callback) unsuccessful_callback(error);
       else console.log(error);
     }
+    
   }
   signout(successful_callback, unsuccessful_callback) {
     if(this.authorized_user) {
@@ -356,6 +361,7 @@ class ToDoListManager {
       else
         console.log("No user logged in!");
     }
+    this.task_loader = null;
   }
   addNewTask(title, description, tags, creation_time, reminder_time, status, successful_callback, unsuccessful_callback) {
     try {
@@ -385,6 +391,25 @@ class ToDoListManager {
         successful_callback(task);
       else 
         console.log(task);
+    }
+    catch(error) {
+      if(unsuccessful_callback) 
+        unsuccessful_callback(error);
+      else 
+        console.log(error);
+    }
+  }
+  loadTasks(bulk_size=5, successful_callback, unsuccessful_callback) {
+    try {
+      if(!this.authorized_user)
+        throw Error("No user logged in!");
+      if(!this.task_loader)
+        throw Error("No task loader found!");
+      let tasks = this.task_loader.load(this.authorized_password, bulk_size);
+      if(successful_callback) 
+        successful_callback(tasks);
+      else 
+        console.log(tasks);
     }
     catch(error) {
       if(unsuccessful_callback) 

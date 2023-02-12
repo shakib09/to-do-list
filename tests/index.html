@@ -189,7 +189,14 @@
         </div> -->
 
       </div>
-      
+      <div class="container">
+        <div class="row">
+          <button type="button" class="btn btn-primary" id="load_more_button">
+            Load More
+          </button>
+        </div>
+        
+      </div>
       
 
       <!-- The Modal -->
@@ -393,11 +400,16 @@
       //   reminderRunner();
       // }, 10000);
       const __TODOLIST_MANAGER__ = new ToDoListManager(
-        (authorized_user)=>{
+        (authorized_user, tasks)=>{
           $(".signedin_links").show();
           $(".unsignedin_links").hide();
           $("#welcome").text(`Welcome ${authorized_user.username}`);
           console.log("currently logged in user: ", authorized_user);
+          tasks.forEach(task => {
+              $("#tasks_list").append(task_element(task));
+          });
+          if(tasks.length!=0)
+            $("#no_task_found").hide();
         },
         (message)=>{
           $(".signedin_links").hide();
@@ -433,6 +445,7 @@
             $(".signedin_links").show();
             $(".unsignedin_links").hide();
             $("#welcome").text(`Welcome ${user.username}`);
+            LoadTasks();
           },
           (error)=>{
             $("#signin_status").text(`unsuccessful authorization: ${error}`);
@@ -450,6 +463,8 @@
 
             $(".signedin_links").hide();
             $(".unsignedin_links").show();
+            $("#tasks_list").empty();
+            $("#no_task_found").show();
           },
           (error)=>{
             console.log(`unsuccessful signedout: ${error}`);
@@ -489,7 +504,26 @@
       $("#new_task").on('click', AddNewTask);
 
 
+      function LoadTasks() {
+        __TODOLIST_MANAGER__.loadTasks(
+          5,
+          (tasks)=>{
+            tasks.forEach(task => {
+              $("#tasks_list").append(task_element(task));
+            });
+            if(tasks.length==0 && $("#no_task_found").is(":hidden"))
+              $("#no_task_found").show();
+            else 
+              $("#no_task_found").hide();
 
+          },
+          (error)=>{
+            console.log("Couldn't load any task!");
+            $("#load_more_button").prop('disabled', true);
+          }
+        );
+      }
+      $("#load_more_button").on('click', LoadTasks);
       
     </script>
   </body>
