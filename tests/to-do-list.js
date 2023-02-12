@@ -86,6 +86,8 @@ class Task {
   static createNewEncryptedTask(title, description, tags, creation_time, reminder_time, status, key) {
     if(key==null || key=="")
       throw Error("Key can't be empty!");
+    if(creation_time==null || creation_time=="" || creation_time==undefined)
+      throw Error("Creation Time appropriately not provided!");
     
     let id = ToDoListUtilities.hashing_crypt(`${creation_time.toString()}-${title}`);
     let new_task = new Task(
@@ -116,7 +118,7 @@ class User{
 
   /* BELOW THESE METHODS CONSIDERS USER OBJECT TO BE ENCRYPTED */
   addTask(task_id, password) {
-    this.tasks.push(task_id);
+    this.tasks.unshift(task_id);
     this.save();
     return this.getTask(task_id, password);
   }
