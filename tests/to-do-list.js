@@ -241,6 +241,45 @@ class User{
   }
 }
 
+class TaskLoader {
+  constructor(user, bulk_size=5) {
+    this.user = user;
+    this.loaded_tasks = [];
+    this.current_indx = 0;
+    this.bulk_size = bulk_size;
+    this.stale = false;
+    this.previous_length = this.user.tasks.length;
+  }
+  load(password) {
+    if(this.user.tasks.length > this.previous_length) {
+      let temp = this.user.tasks.length-this.previous_length-1;
+      while(temp>=0) {
+        let task_obj = this.user.getTask(this.user.tasks[temp], password);
+        this.loaded_tasks.unshift(task_obj);
+        temp -= 1;
+      }
+      this.previous_length = this.user.tasks.length;
+    }
+    
+    if(this.current_indx>=this.user.tasks.length || this.stale) {
+      this.stale = true;
+      throw Error("Can't load more!");
+    }
+    let temp = 0;
+    while(this.current_indx<this.user.tasks.length && temp<this.bulk_size) {
+      let task_obj = this.user.getTask(this.user.tasks[this.current_indx], password);
+      this.loaded_tasks.push(task_obj);
+      this.current_indx += 1;
+      temp += 1;
+    }
+    return this.loaded_tasks.slice(this.current_indx-temp, this.current_indx);
+  }
+  loadAll(password) {
+    this.bulk_size = this.user.tasks.length;
+    return this.load(password);
+  }
+}
+
 class ToDoListManager {
   constructor(authorized_callback, unauthorized_callback){
     this.authorized_user = null;
