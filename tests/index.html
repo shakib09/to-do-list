@@ -368,6 +368,7 @@
         (message)=>{
           $(".signedin_links").hide();
           console.log(message);
+          alert("Please Sign In or Sign Up!");
         }
       );
       function SignUp() {
@@ -504,6 +505,7 @@
         __TODOLIST_MANAGER__.loadTasks(
           5,
           (tasks)=>{
+            $("#load_more_button").prop('disabled', false);
             tasks.forEach(task => {
               $("#tasks_list").append(task_element(task));
             });
