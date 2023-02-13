@@ -131,7 +131,7 @@ class User{
     return task.getObj();
   }
 
-  updateTask(task_id, title, description, tags, creation_time, reminder_time, status, password) {
+  updateTask(task_id, title, description, tags, reminder_time, status, password) {
     if(this.tasks.indexOf(task_id)<0) 
       throw Error(`Task(${task_id}) for User(${this.username}) doesn't exist`);
     let task = Task.getFromLocalStorage(task_id);
@@ -139,12 +139,11 @@ class User{
     task.title = title;
     task.description = description;
     task.tags = tags;
-    task.creation_time = creation_time;
     task.reminder_time = reminder_time;
     task.status = status;
     task.encrypt(password);
     task.save();
-    task.decrypt();
+    task.decrypt(password);
     return task.getObj();
   }
 
@@ -382,11 +381,11 @@ class ToDoListManager {
         console.log(error);
     }
   }
-  updateTask(task_id, title, description, tags, creation_time, reminder_time, status, successful_callback, unsuccessful_callback) {
+  updateTask(task_id, title, description, tags, reminder_time, status, successful_callback, unsuccessful_callback) {
     try {
       if(!this.authorized_user)
         throw Error("No user logged in!");
-      let task = this.authorized_user.updateTask(task_id, title, description, tags, creation_time, reminder_time, status, this.authorized_password);
+      let task = this.authorized_user.updateTask(task_id, title, description, tags, reminder_time, status, this.authorized_password);
       if(successful_callback) 
         successful_callback(task);
       else 
@@ -408,6 +407,23 @@ class ToDoListManager {
       let tasks = this.task_loader.load(this.authorized_password, bulk_size);
       if(successful_callback) 
         successful_callback(tasks);
+      else 
+        console.log(tasks);
+    }
+    catch(error) {
+      if(unsuccessful_callback) 
+        unsuccessful_callback(error);
+      else 
+        console.log(error);
+    }
+  }
+  deleteTask(task_id, successful_callback, unsuccessful_callback) {
+    try {
+      if(!this.authorized_user)
+        throw Error("No user logged in!");
+      let task = this.authorized_user.deleteTask(task_id, this.authorized_password);
+      if(successful_callback) 
+        successful_callback(task);
       else 
         console.log(tasks);
     }

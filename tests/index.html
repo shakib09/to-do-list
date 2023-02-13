@@ -221,15 +221,15 @@
                 <input type="textarea" id="task_description" class="form-control"  placeholder="Description" name="task_description">
               </div>
               <div class="form-group">
-                <label for="task_description">Tags:</label>
-                <input type="textarea" id="task_tags" class="form-control"  placeholder="tags" name="task_tags">
+                <label for="task_tags">Tags:</label>
+                <input type="textarea" id="task_tags" class="form-control"  placeholder="#tags" name="task_tags">
               </div>
               <div class="form-group">
-                <label for="task_description">Reminder Time:</label>
+                <label for="task_reminder_time">Reminder Time:</label>
                 <input type="datetime-local" class="form-control" id="task_reminder_time"  name="task_reminder_time">
               </div>
               <div class="form-group">
-                <label for="task_description">Status:</label>
+                <label for="task_status">Status:</label>
                 <select class="form-select" id="task_status" aria-label="select status">
                   <option value="WAITING" selected>Waiting</option>
                   <option value="PENDING">Pending</option>
@@ -255,29 +255,42 @@
           
             <!-- Modal Header -->
             <div class="modal-header">
-              <h4 class="modal-title">Edit Task</h4>
+              <h4 class="modal-title">Update Task</h4>
               <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
             </div>
             
             <!-- Modal body -->
             <div class="modal-body">
               <div class="form-group">
-                <label for="task_title">Task Title:</label>
+                <label for="edit_task_title">Task Title:</label>
                 <input type="text" class="form-control" id="edit_task_title" placeholder="Title" name="task_title">
               </div>
               <div class="form-group">
-                <label for="task_description">Task Description:</label>
+                <label for="edit_task_description">Task Description:</label>
                 <input type="textarea" id="edit_task_description" class="form-control"  placeholder="Description" name="task_description">
               </div>
               <div class="form-group">
-                <label for="task_description">Time:</label>
-                <input type="datetime-local" class="form-control" id="edit_task_time"  name="task_time">
+                <label for="edit_task_tags">Tags:</label>
+                <input type="textarea" id="edit_task_tags" class="form-control"  placeholder="tags" name="task_tags">
+              </div>
+              <div class="form-group">
+                <label for="edit_task_reminder_time">Reminder Time:</label>
+                <input type="datetime-local" class="form-control" id="edit_task_reminder_time"  name="task_time">
+              </div>
+              <div class="form-group">
+                <label for="edit_task_status">Status:</label>
+                <select class="form-select" id="edit_task_status" aria-label="select status">
+                  <option value="WAITING" selected>Waiting</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="DONE">Done</option>
+                  <option value="TRASHED">Tashed</option>
+                </select>
               </div>
             </div>
             
             <!-- Modal footer -->
             <div class="modal-footer">
-              <button type="button" id="save_task" class="btn btn-success" data-bs-dismiss="modal">Save</button>
+              <button type="button" id="update_task_button" class="btn btn-success" data-bs-dismiss="modal">Save</button>
               <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
             </div>
             
@@ -304,7 +317,7 @@
               <p id="tags_${task_object.id}">Tags: ${task_object.tags}</p>
             </div>
             <div class="card-footer">
-              <button type="button" id="edit_${task_object.id}" class="btn btn-primary" data-bs-bs-toggle="modal" data-bs-bs-target="#edit_modal">
+              <button type="button" id="edit_${task_object.id}" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#edit_modal">
                 <i class="fa-regular fa-pen-to-square"></i>
               </button>
               <button id="delete_${task_object.id}" class="btn btn-danger"><i class="fa-sharp fa-solid fa-trash"></i></button>
@@ -333,33 +346,6 @@
           document.getElementById("save_task").onclick = ()=>{update_task(task_object.id)};
         });
       }
-      function update_task(task_id){
-        console.log("update task");
-        let task_title = $("#edit_task_title").val();
-        let task_description = $("#edit_task_description").val();
-        let task_time = $("#edit_task_time").val();
-
-        let task_object = search_task(task_id);
-        console.log("update task: (before)", task_object);
-
-        
-        task_object.title = task_title;
-        task_object.description = task_description;
-        task_object.time = task_time;
-
-        console.log("update task: (after)", task_object);
-
-        $(`#title_${task_id}`).text(task_title);
-        $(`#time_${task_id}`).text(task_time);
-        $(`#description_${task_id}`).text(task_description);
-      }
-
-
-
-      function remove_task(task_id){
-        delete_task_with_id(task_id);
-        $(`#${task_id}`).remove();
-      }
 
       function taskToast(task){
         return `<div tabindex="0" id="toast_${task.id}" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-autohide="false" >
@@ -376,23 +362,6 @@
             </div>
           </div>`;
       }
-      function reminderRunner(){
-        let ct = new Date();
-        console.log("running reminder...", ct);
-        
-        
-        for(task in tasks){
-          task = tasks[task];
-          let tt = new Date(task.time);
-          console.log("task: "+task+" tt: "+tt);
-          if(tt<=ct && task.checked==false){
-            console.log("reminder for task: ", task, taskToast(task));
-            $("#toast_container").append(taskToast(task));
-            $(`#toast_${task.id}`).toast("show");
-            task.checked = true;
-          }
-        }
-      }
 
       // $("#new_task").on('click', ()=>{console.log("clicked"); new_task();});
       // // $(".toast").toast("show");
@@ -407,6 +376,16 @@
           console.log("currently logged in user: ", authorized_user);
           tasks.forEach(task => {
               $("#tasks_list").append(task_element(task));
+              $(`#delete_${task.id}`).on('click', ()=> RemoveTask(task.id));
+              $(`#edit_${task.id}`).on('click', ()=>{
+                console.log("edit modal");
+                $("#edit_task_title").val(task.title);
+                $("#edit_task_description").val(task.description);
+                $("#edit_task_tags").val(task.tags);
+                $("#edit_task_reminder_time").val(task.reminder_time);
+                $("#edit_task_status").val(task.status);
+                $("#update_task_button").on('click', ()=> UpdateTask(task.id));
+              });
           });
           if(tasks.length!=0)
             $("#no_task_found").hide();
@@ -485,15 +464,15 @@
             console.log("successful task creation: ", task);
 
             $("#tasks_list").append(task_element(task));
-            $(`#delete_${task.id}`).on('click', ()=>{
-              console.log("remove task", task.id);
-              remove_task(task.id);
-            });
+            $(`#delete_${task.id}`).on('click', ()=> RemoveTask(task.id));
             $(`#edit_${task.id}`).on('click', ()=>{
+              console.log("edit modal");
               $("#edit_task_title").val(task.title);
               $("#edit_task_description").val(task.description);
-              $("#edit_task_time").val(task.reminder_time);
-              document.getElementById("save_task").onclick = ()=>{update_task(task.id)};
+              $("#edit_task_tags").val(task.tags);
+              $("#edit_task_reminder_time").val(task.reminder_time);
+              $("#edit_task_status").val(task.status);
+              $("#update_task_button").on('click', ()=> UpdateTask(task.id));
             });
           },
           (error)=>{
@@ -503,6 +482,48 @@
       }
       $("#new_task").on('click', AddNewTask);
 
+      function RemoveTask(task_id){
+        __TODOLIST_MANAGER__.deleteTask(
+            task_id,
+            (task)=>{
+              $(`#${task_id}`).remove();
+              console.log(`task ${task} should be deleted by now!`);
+            },
+            (error)=>{
+              console.log(`Couldn't delete Task(${task_id}`);
+            }
+        );
+      }
+
+      function UpdateTask(task_id){
+        console.log("update task");
+        let task_title = $("#edit_task_title").val();
+        let task_description = $("#edit_task_description").val();
+        let task_tags = $("#edit_task_tags").val();
+        let task_reminder_time = $("#edit_task_reminder_time").val(); 
+        let task_status = $("#edit_task_status").val();
+        
+        __TODOLIST_MANAGER__.updateTask(
+          task_id,
+          task_title,
+          task_description,
+          task_tags,
+          task_reminder_time,
+          task_status,
+          (task)=>{
+            console.log(`Task(${task_id} updated successfully!`);
+            $(`#title_${task_id}`).text(task.title);
+            $(`#creation_time_${task_id}`).text(task.creation_time);
+            $(`#description_${task_id}`).text(task.description);
+            $(`#reminder_time_${task_id}`).text(task.reminder_time);
+            $(`#tags_${task_id}`).text(task.tags);
+            $(`#status_${task_id}`).text(task.status);
+          },
+          (error)=>{
+            console.log(`Task(${task_id} update unsuccessful! ${error}`);
+          }
+        );
+      }
 
       function LoadTasks() {
         __TODOLIST_MANAGER__.loadTasks(
