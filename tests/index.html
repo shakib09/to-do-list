@@ -438,7 +438,7 @@
           (task)=>{
             console.log("successful task creation: ", task);
 
-            $("#tasks_list").append(task_element(task));
+            $("#tasks_list").prepend(task_element(task));
             $(`#delete_${task.id}`).on('click', ()=> RemoveTask(task.id));
             $(`#edit_${task.id}`).on('click', ()=>{
               console.log("edit modal");
