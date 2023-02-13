@@ -453,6 +453,8 @@
           },
           (error)=>{
             console.log(`unsuccessful on task creations: ${error}`);
+            if(__TODOLIST_MANAGER__.authorized_user==null)
+              alert("Sign In first!");
           }
         );
       }
