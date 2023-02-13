@@ -487,12 +487,12 @@
           task_status,
           (task)=>{
             console.log(`Task(${task_id} updated successfully!`);
-            $(`#title_${task_id}`).text(task.title);
-            $(`#creation_time_${task_id}`).text(task.creation_time);
-            $(`#description_${task_id}`).text(task.description);
-            $(`#reminder_time_${task_id}`).text(task.reminder_time);
-            $(`#tags_${task_id}`).text(task.tags);
-            $(`#status_${task_id}`).text(task.status);
+            $(`#title_${task_id}`).text("Title: "+task.title);
+            $(`#creation_time_${task_id}`).text("Creation Time: "+task.creation_time);
+            $(`#description_${task_id}`).text("Description: "+task.description);
+            $(`#reminder_time_${task_id}`).text("Reminder Time: "+task.reminder_time);
+            $(`#tags_${task_id}`).text("Tags: "+task.tags);
+            $(`#status_${task_id}`).text("Status: "+task.status);
           },
           (error)=>{
             console.log(`Task(${task_id} update unsuccessful! ${error}`);
