@@ -246,18 +246,18 @@ class TaskLoader {
     this.loaded_tasks = [];
     this.current_indx = 0;
     this.stale = false;
-    this.previous_length = this.user.tasks.length;
+    // this.previous_length = this.user.tasks.length;
   }
   load(password, bulk_size=5) {
-    if(this.user.tasks.length > this.previous_length) {
-      let temp = this.user.tasks.length-this.previous_length-1;
-      while(temp>=0) {
-        let task_obj = this.user.getTask(this.user.tasks[temp], password);
-        this.loaded_tasks.unshift(task_obj);
-        temp -= 1;
-      }
-      this.previous_length = this.user.tasks.length;
-    }
+    // if(this.user.tasks.length > this.previous_length) {
+    //   let temp = this.user.tasks.length-this.previous_length-1;
+    //   while(temp>=0) {
+    //     let task_obj = this.user.getTask(this.user.tasks[temp], password);
+    //     this.loaded_tasks.unshift(task_obj);
+    //     temp -= 1;
+    //   }
+    //   this.previous_length = this.user.tasks.length;
+    // }
 
     if(this.current_indx>=this.user.tasks.length || this.stale) {
       this.stale = true;
@@ -274,6 +274,24 @@ class TaskLoader {
   }
   loadAll(password) {
     return this.load(password, this.user.tasks.length);
+  }
+  // necessary for current_indx
+  taskAdded(task) {
+    this.loaded_tasks.unshift(task);
+    this.current_indx += 1;
+  }
+  // necessary for current_indx
+  taskDeleted(task_id) {
+    if(this.loaded_tasks.findIndex((task)=> task.id==task_id)>-1){
+      this.loaded_tasks = this.loaded_tasks.filter((task)=> task.id!=task_id);
+      this.current_indx -= 1;
+    }
+  }
+  // may be redundant
+  taskUpdated(task) {
+    let indx = this.loaded_tasks.findIndex((xtask)=> xtask.id==task.id);
+    if(indx>-1)
+      this.loaded_tasks[indx] = task;
   }
 }
 
@@ -369,6 +387,8 @@ class ToDoListManager {
       let new_task = Task.createNewEncryptedTask(title, description, tags, creation_time, reminder_time, status, this.authorized_password);
       console.log("new task: ", new_task);
       new_task = this.authorized_user.addTask(new_task.id, this.authorized_password);
+      this.task_loader.taskAdded(new_task);
+
       if(successful_callback) 
         successful_callback(new_task);
       else 
@@ -386,6 +406,7 @@ class ToDoListManager {
       if(!this.authorized_user)
         throw Error("No user logged in!");
       let task = this.authorized_user.updateTask(task_id, title, description, tags, reminder_time, status, this.authorized_password);
+      this.task_loader.taskUpdated(task);
       if(successful_callback) 
         successful_callback(task);
       else 
@@ -422,10 +443,12 @@ class ToDoListManager {
       if(!this.authorized_user)
         throw Error("No user logged in!");
       let task = this.authorized_user.deleteTask(task_id, this.authorized_password);
+      this.task_loader.taskDeleted(task_id);
+
       if(successful_callback) 
         successful_callback(task);
       else 
-        console.log(tasks);
+        console.log(task);
     }
     catch(error) {
       if(unsuccessful_callback) 

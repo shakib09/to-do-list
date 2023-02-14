@@ -510,6 +510,16 @@
             $("#load_more_button").prop('disabled', false);
             tasks.forEach(task => {
               $("#tasks_list").append(task_element(task));
+              $(`#delete_${task.id}`).on('click', ()=> RemoveTask(task.id));
+              $(`#edit_${task.id}`).on('click', ()=>{
+                console.log("edit modal");
+                $("#edit_task_title").val(task.title);
+                $("#edit_task_description").val(task.description);
+                $("#edit_task_tags").val(task.tags);
+                $("#edit_task_reminder_time").val(task.reminder_time);
+                $("#edit_task_status").val(task.status);
+                $("#update_task_button").on('click', ()=> UpdateTask(task.id));
+              });
             });
             if(tasks.length==0 && $("#no_task_found").is(":hidden"))
               $("#no_task_found").show();
