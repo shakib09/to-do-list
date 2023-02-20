@@ -164,8 +164,8 @@
         <div class="row border p-3">
           <div class="col">
             <form class="d-flex ps-5" role="search">
-              <input class="form-control" type="search" placeholder="Search" aria-label="Search">
-              <button class="btn btn-outline-success ms-2" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>                   
+              <input class="form-control" id="search_task_token" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success ms-2" id="search_button" type="button"><i class="fa-solid fa-magnifying-glass"></i></button>                   
             </form>  
           </div>
           <div class="col">
@@ -576,6 +576,25 @@
           }
         );
       }
+      function SearchTasks() {
+        __TODOLIST_MANAGER__.searchTasks(
+          $("#search_task_token").val(),
+          (tasks)=>{
+            if(tasks.length!=0) {
+              $("#tasks_list").empty();
+              tasks.forEach(AppendTask);
+            }
+            else 
+              AddNoTaskFound();
+            $("#load_more_button").hide();
+          },
+          (error) => {
+            console.log("error: ", error);
+            alert("Error happened searching tasks: ", $("#search_task_token").val());
+          }
+        );
+      }
+
       $("#menu_all_tasks").on('click', GetAllTasks);
       $("#menu_waiting_tasks").on('click', ()=> {
         $(".dropdown-item").removeClass("active");
@@ -597,6 +616,8 @@
         $("#menu_trashed_tasks").addClass("active");
         GetTasksWithStatus(Task.Trashed);
       });
+      $("#search_button").on('click', SearchTasks);
+
     </script>
   </body>
 </html>

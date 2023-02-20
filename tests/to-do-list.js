@@ -482,4 +482,23 @@ class ToDoListManager {
         console.log(error);
     }
   }
+  searchTasks(token, successful_callback, unsuccessful_callback) {
+    try {
+      this.task_loader.loadAll(this.authorized_password);
+      let tasks = this.task_loader.loaded_tasks.slice(0, this.task_loader.length);
+      tasks = tasks.filter((task)=> (task.title.toLowerCase().search(token)>-1 || task.tags.search(token)>-1 || task.description.toLowerCase().search(token)>-1));
+
+      if(successful_callback)
+        successful_callback(tasks);
+      else 
+        console.log(tasks);
+    }
+    catch(error) {
+      if(unsuccessful_callback)
+        unsuccessful_callback(error);
+      else
+        console.log(error);
+    }
+  }
+
 }
