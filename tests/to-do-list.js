@@ -249,19 +249,11 @@ class TaskLoader {
     // this.previous_length = this.user.tasks.length;
   }
   load(password, bulk_size=5) {
-    // if(this.user.tasks.length > this.previous_length) {
-    //   let temp = this.user.tasks.length-this.previous_length-1;
-    //   while(temp>=0) {
-    //     let task_obj = this.user.getTask(this.user.tasks[temp], password);
-    //     this.loaded_tasks.unshift(task_obj);
-    //     temp -= 1;
-    //   }
-    //   this.previous_length = this.user.tasks.length;
-    // }
 
     if(this.current_indx>=this.user.tasks.length || this.stale) {
       this.stale = true;
-      throw Error("Can't load more!");
+      // throw Error("CantLoadMore");
+      return [];
     }
     let temp = 0;
     while(this.current_indx<this.user.tasks.length && temp<bulk_size) {
@@ -454,6 +446,39 @@ class ToDoListManager {
       if(unsuccessful_callback) 
         unsuccessful_callback(error);
       else 
+        console.log(error);
+    }
+  }
+  getTasksWithStatus(status, successful_callback, unsuccessful_callback) {
+    try {
+      this.task_loader.loadAll(this.authorized_password);
+      
+      let tasks = this.task_loader.loaded_tasks.filter((task)=> task.status == status);
+      if(successful_callback)
+        successful_callback(tasks);
+      else 
+        console.log(tasks);
+    }
+    catch(error) {
+      if(unsuccessful_callback)
+        unsuccessful_callback(error);
+      else
+        console.log(error);
+    }
+  }
+  getAllTasks(successful_callback, unsuccessful_callback) {
+    try {
+      this.task_loader.loadAll(this.authorized_password);
+      let tasks = this.task_loader.loaded_tasks.slice(0, this.task_loader.length);
+      if(successful_callback)
+        successful_callback(tasks);
+      else 
+        console.log(tasks);
+    }
+    catch(error) {
+      if(unsuccessful_callback)
+        unsuccessful_callback(error);
+      else
         console.log(error);
     }
   }
